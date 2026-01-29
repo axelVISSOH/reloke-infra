@@ -1,0 +1,31 @@
+steps:
+  # 1. Cloner le Backend
+  - name: 'gcr.io/cloud-builders/git'
+    args: ['clone', 'https://github.com/axelVISSOH/reloke-back.git', 'backend']
+
+  # 2. Cloner le Frontend
+  - name: 'gcr.io/cloud-builders/git'
+    args: ['clone', 'https://github.com/Houken23/reloke-front.git', 'frontend']
+
+  # 3. Builder l'image Docker unique
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/reloke-monolith', '.']
+
+  # 4. Pousser l'image vers le registre Google
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/reloke-monolith']
+
+  # 5. Déployer sur Cloud Run (Région Paris)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run', 'deploy', 'reloke-api',
+        '--image', 'gcr.io/$PROJECT_ID/reloke-monolith',
+        '--region', 'europe-west9',
+        '--platform', 'managed',
+        '--allow-unauthenticated'
+      ]
+
+images:
+  - 'gcr.io/$PROJECT_ID/reloke-monolith'
